@@ -26,6 +26,7 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+*.zip
 
 # Local vector store / generated data
 data/Vector_Store/

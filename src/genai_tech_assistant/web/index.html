@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GenAI Technical Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/static/app.css?v=2" />
+</head>
+
+<body>
+  <div class="page-shell">
+    <div class="ambient ambient-left"></div>
+    <div class="ambient ambient-right"></div>
+
+    <header class="hero">
+      <div class="eyebrow">Industrial RAG Console</div>
+      <h1>Ask your manuals like a technician </h1>
+      <p class="hero-copy">
+        This interface uses your local document chunks, vector store, and Ollama model to answer
+        questions grounded in the retrieved technical context.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-card">
+          <span class="stat-label">Mode</span>
+          <strong>Local Retrieval</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Model Path</span>
+          <strong>Ollama + Chroma</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Usage</span>
+          <strong>Diagnostics & Manuals</strong>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel query-panel">
+        <div class="panel-heading">
+          <h2>Ask a question</h2>
+          <p>Use natural language. The assistant will retrieve matching manual context before answering.</p>
+        </div>
+
+        <form id="ask-form" class="ask-form">
+          <label class="input-label" for="question">Question</label>
+          <textarea id="question" name="question" rows="5"
+            placeholder="Example: What should I check first if the compressor shows an over-temperature fault?"
+            required></textarea>
+
+          <div class="controls">
+            <label class="slider-group" for="top_k">
+              <span>Retrieved chunks</span>
+              <div class="slider-row">
+                <input id="top_k" name="top_k" type="range" min="1" max="8" value="5" />
+                <output id="top_k_value" for="top_k">5</output>
+              </div>
+            </label>
+
+            <button id="submit-button" type="submit">Run Technical Query</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="results-grid">
+        <article class="panel answer-panel">
+          <div class="panel-heading">
+            <h2>Assistant response</h2>
+            <p id="status-text">Ready for your first question.</p>
+          </div>
+
+          <div id="answer-box" class="answer-box empty">
+            The answer will appear here after a retrieval run.
+          </div>
+        </article>
+
+        <aside class="panel sources-panel">
+          <div class="panel-heading">
+            <h2>Retrieved evidence</h2>
+            <p>Chunks used to ground the answer.</p>
+          </div>
+
+          <div id="sources-box" class="sources-box">
+            <div class="empty-state">No retrieved chunks yet.</div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js?v=2" defer></script>
+</body>
+
+</html>

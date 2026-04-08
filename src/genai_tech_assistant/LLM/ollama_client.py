@@ -1,3 +1,5 @@
+import json
+
 import requests
 
 from genai_tech_assistant.config import settings
@@ -18,6 +20,53 @@ class OllamaLLMClient:
         )
 
     def generate_answer(self, question: str, context: str) -> str:
+        payload = self._build_payload(question, context, stream=False)
+
+        logger.info(
+            f"Calling Ollama model={self.model_name} "
+            f"(question length={len(question)}, context length={len(context)})"
+        )
+
+        response = requests.post(
+            f"{self.base_url}/api/chat",
+            json=payload,
+            timeout=120,
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        return data["message"]["content"].strip()
+
+    def stream_answer(self, question: str, context: str):
+        payload = self._build_payload(question, context, stream=True)
+
+        logger.info(
+            f"Streaming Ollama model={self.model_name} "
+            f"(question length={len(question)}, context length={len(context)})"
+        )
+
+        with requests.post(
+            f"{self.base_url}/api/chat",
+            json=payload,
+            timeout=120,
+            stream=True,
+        ) as response:
+            response.raise_for_status()
+
+            for raw_line in response.iter_lines(decode_unicode=True):
+                if not raw_line:
+                    continue
+
+                data = json.loads(raw_line)
+                message = data.get("message") or {}
+                content = message.get("content", "")
+                if content:
+                    yield content
+
+                if data.get("done"):
+                    break
+
+    def _build_payload(self, question: str, context: str, stream: bool) -> dict:
         system_prompt = """
 You are a technician assistant for industrial equipment documentation.
 
@@ -61,6 +110,7 @@ Formatting rules:
 - Use bullet points or numbered lists only when they improve clarity.
 - Do not mention that you are an AI assistant.
 - Do not say "according to chunk..." or anything similar.
+- Do not use Markdown formatting like **bold** or # headings.
 """
 
         user_prompt = (
@@ -69,26 +119,11 @@ Formatting rules:
             "Answer using only the retrieved context."
         )
 
-        payload = {
+        return {
             "model": self.model_name,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "stream": False,
+            "stream": stream,
         }
-
-        logger.info(
-            f"Calling Ollama model={self.model_name} "
-            f"(question length={len(question)}, context length={len(context)})"
-        )
-
-        response = requests.post(
-            f"{self.base_url}/api/chat",
-            json=payload,
-            timeout=120,
-        )
-        response.raise_for_status()
-
-        data = response.json()
-        return data["message"]["content"].strip()
